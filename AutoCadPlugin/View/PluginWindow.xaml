@@ -1,0 +1,310 @@
+﻿<UserControl x:Class="AutoCadPlugin.View.PluginWindow"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:local="clr-namespace:AutoCadPlugin.View"
+             xmlns:util="clr-namespace:AutoCadPlugin.Util"
+             mc:Ignorable="d" 
+             d:DesignHeight="350" d:DesignWidth="500" Foreground="White" Background="DimGray">
+    <UserControl.Resources>
+        <!-- Определение стилей -->
+        <ResourceDictionary Source="ResourceDictionary.xaml" />
+    </UserControl.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="2*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="30" />
+        </Grid.RowDefinitions>
+        <!-- Список слоев со свойствами -->
+        <ListView x:Name ="layers" 
+                  Grid.Column ="0"
+                  Grid.Row="0"
+                  DataContext="{Binding LayersDataContext}" 
+                  ItemsSource="{Binding Layers}" 
+                  SelectedItem="{Binding SelectedLayer}"
+                  ToolTip="Выберите слой для просмотра его фигур.">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Имя">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Grid.Row="0" 
+                                         Grid.Column="1" 
+                                         Text="{Binding Name}" 
+                                         Width="Auto" 
+                                         ToolTip="Редактирование имени слоя."/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Цвет">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Label  x:Name="color"                                        
+                                        Background="{Binding Brush}"                                        
+                                        BorderBrush="Black" 
+                                        BorderThickness="1"
+                                        MouseDoubleClick ="color_MouseLeftButtonDown"
+                                        ToolTip="Редактирование цвета слоя (двойной щелчок)."/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Видимость">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox x:Name="checkBoxVisibility" 
+                                        IsChecked="{Binding Visibility}" 
+                                        HorizontalAlignment="Left" 
+                                        VerticalAlignment="Center"
+                                        ToolTip="Видимость объектов слоя."/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <GridSplitter Grid.Row="0" Grid.Column="1" Width="5"
+                      VerticalAlignment="Stretch" HorizontalAlignment="Center"></GridSplitter>
+        <!-- Списки объектов (точки, отрезки, окружности) -->
+        <TabControl Grid.Row="0" 
+                    Grid.Column="2" 
+                    Grid.ColumnSpan="2">
+            <!-- Список точек со свойствами -->
+            <TabItem Header="Точки"
+                     ToolTip="Список точек выбранного слоя.">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ListView x:Name ="listPoints" 
+                                Grid.Column ="0" 
+                                Grid.Row="0"
+                                DataContext="{Binding ElementName=layers, Path=SelectedItem}" 
+                                ItemsSource="{Binding Points}" 
+                                SelectedItem="{Binding SelectedPoint}"
+                                ToolTip="Список точек выбранного слоя.">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <WrapPanel>
+                                    <TextBlock Text="{Binding Name}" FontWeight="Bold" />
+                                    <TextBlock Text=", Координаты: [" />
+                                    <TextBlock Text="{Binding Position.X}" FontWeight="Bold" />
+                                    <TextBlock Text=", " />
+                                    <TextBlock Text="{Binding Position.Y}" FontWeight="Bold" />
+                                    <TextBlock Text="], Высота: " />
+                                    <TextBlock Text="{Binding Height}" FontWeight="Bold" />
+                                </WrapPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                    <!-- Список свойств выбранной точки -->
+                    <Grid Grid.Row="0" 
+                          Grid.Column="1" 
+                          DataContext="{Binding ElementName=listPoints, Path=SelectedItem}"
+                          Visibility="{Binding SelectedItem, ElementName=listPoints, Converter={StaticResource si2v}}" 
+                          ToolTip="Свойства выбранной точки.">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Row="0" Grid.Column="0" Content="X-координата :" />
+                        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Position.X}" />
+                        <Label Grid.Row="1" Grid.Column="0" Content="Y-координата :" />
+                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Position.Y}" />
+                        <Label Grid.Row="2" Grid.Column="0" Content="Высота :" />
+                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Height}" />
+                    </Grid>
+                </Grid>
+            </TabItem>
+            <!-- Список отрезков со свойствами -->
+            <TabItem Header="Отрезки"
+                     ToolTip="Список отрезков выбранного слоя.">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ListView x:Name ="listLines" 
+                                Grid.Column ="0" 
+                                Grid.Row="0"
+                                DataContext="{Binding ElementName=layers, Path=SelectedItem}" 
+                                ItemsSource="{Binding Lines}" 
+                                SelectedItem="{Binding SelectedLine}"
+                                ToolTip="Список отрезков выбранного слоя.">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <WrapPanel>
+                                    <TextBlock Text="{Binding Name}" FontWeight="Bold" />
+                                    <TextBlock Text=", Начало: [" />
+                                    <TextBlock Text="{Binding StartPoint.X}" FontWeight="Bold" />
+                                    <TextBlock Text=", " />
+                                    <TextBlock Text="{Binding StartPoint.Y}" FontWeight="Bold" />
+                                    <TextBlock Text="], Конец: [" />
+                                    <TextBlock Text="{Binding EndPoint.X}" FontWeight="Bold" />
+                                    <TextBlock Text=", " />
+                                    <TextBlock Text="{Binding EndPoint.Y}" FontWeight="Bold" />
+                                    <TextBlock Text="], Высота: " />
+                                    <TextBlock Text="{Binding Height}" FontWeight="Bold" />
+                                </WrapPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                    <!-- Список свойств выбранного отрезка -->
+                    <Grid Grid.Row="0" 
+                          Grid.Column="1" 
+                          DataContext="{Binding ElementName=listLines, Path=SelectedItem}"
+                          Visibility="{Binding SelectedItem, ElementName=listLines, Converter={StaticResource si2v}}"
+                          ToolTip="Свойства выбранного отрезка.">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto"  />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="10px" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Row="0" 
+                               Grid.ColumnSpan="2" 
+                               Content="Начало" 
+                               HorizontalAlignment="Center" />
+                        <Label Grid.Row="1" Grid.Column="0" Content="X-координата :" />
+                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding StartPoint.X}" />
+                        <Label Grid.Row="2" Grid.Column="0" Content="Y-координата :" />
+                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding StartPoint.Y}" />
+                        <Label Grid.Row="3" 
+                               Grid.ColumnSpan="2" 
+                               Content="Конец" 
+                               HorizontalAlignment="Center" />
+                        <Label Grid.Row="4" Grid.Column="0" Content="X-координата :"/>
+                        <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding EndPoint.X}" />
+                        <Label Grid.Row="5" Grid.Column="0" Content="Y-координата :" />
+                        <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding EndPoint.Y}" />
+                        <Label Grid.Row="6" 
+                               Grid.ColumnSpan="2" 
+                               Content=" " 
+                               HorizontalAlignment="Center" 
+                               Height="5px"/>
+                        <Label Grid.Row="7" Grid.Column="0" Content="Высота :" />
+                        <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding Height}" />
+                    </Grid>
+                </Grid>
+            </TabItem>
+            <!-- Список окружностей со свойствами -->
+            <TabItem Header="Окружности"
+                     ToolTip="Список окружностей выбранного слоя.">
+                <Grid 
+                    Grid.Row="1" 
+                    Grid.Column="0" 
+                    Grid.ColumnSpan="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ListView x:Name ="listCircles" 
+                                Grid.Column ="0" 
+                                Grid.Row="0"
+                                DataContext="{Binding ElementName=layers, Path=SelectedItem}" 
+                                ItemsSource="{Binding Circles}" 
+                                SelectedItem="{Binding SelectedCercle}"
+                                ToolTip="Список окружностей выбранного слоя.">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <WrapPanel>
+                                    <TextBlock Text="{Binding Name}" FontWeight="Bold" />
+                                    <TextBlock Text=", Центр: [" />
+                                    <TextBlock Text="{Binding Center.X}" FontWeight="Bold" />
+                                    <TextBlock Text=", " />
+                                    <TextBlock Text="{Binding Center.Y}" FontWeight="Bold" />
+                                    <TextBlock Text="], Радиус: " />
+                                    <TextBlock Text="{Binding Radius}" FontWeight="Bold" />
+                                    <TextBlock Text="], Высота: " />
+                                    <TextBlock Text="{Binding Height}" FontWeight="Bold" />
+                                </WrapPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                    <!-- Свойства выбранной окружности -->
+                    <Grid Grid.Row="0" 
+                          Grid.Column="1" 
+                          DataContext="{Binding ElementName=listCircles, Path=SelectedItem}"
+                          Visibility="{Binding SelectedItem, ElementName=listCircles, Converter={StaticResource si2v}}"
+                          ToolTip="Свойства выбранной окружности.">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="10px" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="10px" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Row="0" 
+                               Grid.ColumnSpan="2" 
+                               Content="Центр" 
+                               HorizontalAlignment="Center" />
+                        <Label Grid.Row="1" Grid.Column="0" Content="X-координата :"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Center.X}"/>
+                        <Label Grid.Row="2" Grid.Column="0" Content="Y-координата :"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Center.Y}"/>
+                        <Label Grid.Row="3" 
+                               Grid.ColumnSpan="2" 
+                               Content=" " 
+                               HorizontalAlignment="Center" 
+                               Height="5px"/>
+                        <Label Grid.Row="4" Grid.Column="0" Content="Радиус :"/>
+                        <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding Radius}"/>
+                        <Label Grid.Row="5" 
+                               Grid.ColumnSpan="2" 
+                               Content=" " 
+                               HorizontalAlignment="Center" 
+                               Height="5px"/>
+                        <Label Grid.Row="6" Grid.Column="0" Content="Высота :" />
+                        <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding Height}" />
+                    </Grid>
+                </Grid>
+            </TabItem>            
+        </TabControl>
+        
+        <!-- Кнопки Обновить и Применить -->
+        <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button x:Name="reload" 
+                    Content="Обновить" 
+                    Margin="3,3,10,3" 
+                    Click="reload_Click" 
+                    ToolTip="Обновить информацию о чертеже."/>
+            <Button x:Name="update"                     
+                    Content="Применить" 
+                    Margin="10,3,3,3" 
+                    Click="update_Click" 
+                    ToolTip="Применить изменения."/>
+        </StackPanel>
+    </Grid>
+</UserControl>
