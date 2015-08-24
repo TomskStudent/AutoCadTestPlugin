@@ -23,7 +23,7 @@ namespace AutoCadPlugin.View
             }
         }
 
-        // Конструктор
+        // Конструктор.
         public PluginWindow()
         {
             _layersViewModel = new LayersViewModel();
@@ -32,19 +32,19 @@ namespace AutoCadPlugin.View
             InitializeComponent();
         }
 
-        // Перезагрузка объектов документа
+        // Перезагрузка объектов документа.
         private void reload_Click(object sender, RoutedEventArgs e)
         {
             LayersDataContext.Reload();
         }
 
-        // Сохранение изменений в документ
+        // Сохранение изменений в документ.
         private void update_Click(object sender, RoutedEventArgs e)
         {
             LayersDataContext.Update();
         }
 
-        // Открытие даилогового окна измненеия цвета слоя
+        // Открытие диалогового окна изменения цвета слоя.
         private void color_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             LayersDataContext.SelectedLayer.ChangeColorByDlg();
